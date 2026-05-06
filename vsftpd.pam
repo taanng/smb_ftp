@@ -1,0 +1,2 @@
+auth    required        pam_listfile.so item=user sense=allow file=/etc/vsftpd.userlist onerr=fail
+account required        pam_permit.so
