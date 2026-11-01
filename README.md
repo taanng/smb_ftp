@@ -1,6 +1,6 @@
-# SMB + FTP Docker 镜像
+# SMB + FTP + WebDAV Docker 镜像
 
-基于 Alpine Linux 的轻量级文件服务器，集成 Samba 和 vsftpd。
+基于 Alpine Linux 的轻量级文件服务器，集成 Samba、vsftpd 和 Nginx WebDAV。
 
 ## 项目结构
 
@@ -9,6 +9,7 @@
 ├── smb.conf            # Samba 配置模板
 ├── vsftpd.conf         # FTP 配置
 ├── vsftpd.pam          # FTP PAM 认证配置
+├── webdav.conf         # Nginx WebDAV 配置模板
 ├── start.sh            # 容器启动脚本
 └── README.md
 ```
@@ -21,6 +22,7 @@
 | 密码 | `testpassord` |
 | UID:GID | `1000:1000` |
 | 共享目录 | `/share_data` |
+| WebDAV 端口 | `20836` |
 
 支持通过环境变量自定义账号，见下方说明。
 
@@ -75,6 +77,7 @@ docker run -d \
 | `PASSWORD` | `testpassord` | 密码 |
 | `USER_UID` | `1000` | 用户 UID |
 | `USER_GID` | `1000` | 用户组 GID |
+| `WEBDAV_PORT` | `20836` | WebDAV 监听端口 |
 
 ## 使用方法
 
@@ -132,4 +135,32 @@ curl -T 本地文件.txt ftp://用户名:密码@服务器IP/
 # 下载文件
 curl -O ftp://用户名:密码@服务器IP/文件.txt
 ```
+
+### WebDAV 访问
+
+SMB、FTP 和 WebDAV 共用同一个用户名、密码及 `/share_data` 目录。WebDAV 默认地址为：
+
+```text
+http://服务器IP:20836/
+```
+
+**curl:**
+
+```bash
+# 查看目录
+curl -u 用户名:密码 -X PROPFIND -H "Depth: 1" http://服务器IP:20836/
+
+# 上传文件
+curl -u 用户名:密码 -T 本地文件.txt http://服务器IP:20836/文件.txt
+
+# 下载文件
+curl -u 用户名:密码 -O http://服务器IP:20836/文件.txt
+```
+
+**Windows / macOS:**
+
+- Windows 文件资源管理器可映射网络驱动器 `http://服务器IP:20836/`。
+- macOS Finder 中选择“连接服务器”，输入 `http://服务器IP:20836/`。
+
+WebDAV 当前使用 HTTP Basic Auth，账号和密码会以明文链路传输。仅应在可信内网使用；如需公网访问，请在前方配置 HTTPS 反向代理。
 
