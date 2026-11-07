@@ -111,6 +111,14 @@ smbclient //服务器IP/share -U 用户名%密码 -c "get 文件.txt"
 2. 输入 `smb://服务器IP/share`
 3. 输入用户名和密码
 
+macOS 兼容性说明：
+
+- 已启用 `vfs_fruit` 与 `vfs_streams_xattr`，FinderInfo 等元数据写入 xattr，普通文件不会再生成 `._` 伴生文件；资源分支仍以 AppleDouble 文件保存。
+- `/share_data` 所在文件系统必须支持 xattr。ext4、XFS、Btrfs 通常可用；exFAT/NTFS 等不支持 xattr 的宿主机目录会导致 macOS 写入元数据失败。
+- `deadtime = 0`，避免 Finder 的空闲连接被主动断开。
+- `strict allocate = no`，保留稀疏文件语义，避免 macOS 磁盘映像或 sparsebundle 被强制分配满。
+- 当前 `server signing = disabled`。普通 Finder 文件访问可用，但 macOS 26.4+ 的 Time Machine 要求 SMB 签名；如需 Time Machine，请把 `smb.conf` 改为 `server signing = auto`（或 `mandatory`），并单独创建启用 `fruit:time machine = yes` 的共享，不建议与日常文件共享混用。
+
 ### FTP 访问
 
 **命令行:**
